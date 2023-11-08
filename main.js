@@ -8,20 +8,39 @@ const slidesLength = imageSlide.querySelectorAll('div').length;
 
 let activeSlideIndex = 0;
 
+// Determine the aspect ratio
 let aspectRatio = sliderContainer.clientWidth / sliderContainer.clientHeight;
 
-if(aspectRatio < 1.25) {
-    textSlide.style.left = `-${(slidesLength - 1) * 100}vw`
-} else {
-    textSlide.style.top = `-${(slidesLength - 1) * 100}vh`
-}
+// Event listeners
 
+// Event listener for resizing the window
+window.addEventListener('resize', () => {
+    aspectRatio = sliderContainer.clientWidth / sliderContainer.clientHeight;
+    renderSlides();
+});
+
+// Event listeners for buttons
 buttonPrevious.addEventListener('click', () => changeSlide('previous'));
 buttonNext.addEventListener('click', () => changeSlide('next'));
 
+
+// Set the position of the slides
+const renderSlides = () => {
+    if (aspectRatio < 1.25) {
+        // Portrait mode
+        const sliderWidth = sliderContainer.clientWidth;
+        imageSlide.style.transform = `translateX(-${activeSlideIndex * sliderWidth}px)`;
+        textSlide.style.transform = `translateX(-${(slidesLength - activeSlideIndex - 1) * sliderWidth}px)`;
+    } else {
+        // Landscape mode
+        const sliderHeight = sliderContainer.clientHeight;
+        imageSlide.style.transform = `translateY(-${activeSlideIndex * sliderHeight}px)`;
+        textSlide.style.transform = `translateY(-${(slidesLength - activeSlideIndex - 1) * sliderHeight}px)`;
+    }
+}
+
+// Function to change slide in the chosen direction
 const changeSlide = (direction) => {
-    const sliderHeight = sliderContainer.clientHeight;
-    const sliderWidth = sliderContainer.clientWidth;
     if(direction === 'previous') {
         activeSlideIndex++;
         if(activeSlideIndex > slidesLength - 1) activeSlideIndex = 0;
@@ -29,11 +48,8 @@ const changeSlide = (direction) => {
         activeSlideIndex--;
         if(activeSlideIndex < 0) activeSlideIndex = slidesLength - 1;
     }
-    if(aspectRatio < 1.25) {
-        imageSlide.style.transform = `translateX(-${activeSlideIndex * sliderWidth}px)`;
-        textSlide.style.transform = `translateX(${activeSlideIndex * sliderWidth}px)`;
-    } else {
-        imageSlide.style.transform = `translateY(-${activeSlideIndex * sliderHeight}px)`;
-        textSlide.style.transform = `translateY(${activeSlideIndex * sliderHeight}px)`;
-    }
+    renderSlides();
 }
+
+
+renderSlides();
