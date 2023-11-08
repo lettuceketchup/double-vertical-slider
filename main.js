@@ -7,8 +7,7 @@
 
 // Constants
 const CHANGE_ASPECT_RATIO = 1.25;
-const PREVIOUS = 'previous';
-const NEXT = 'next';
+const MINIMUM_SCROLL = 30;
 
 // Selectors
 const sliderContainer = document.querySelector('.slider-container');
@@ -21,6 +20,7 @@ const slidesLength = imageSlide.querySelectorAll('div').length;
 // Variables
 let activeSlideIndex = 0;
 let aspectRatio = sliderContainer.clientWidth / sliderContainer.clientHeight;
+let orientationPortrait = aspectRatio < CHANGE_ASPECT_RATIO;
 
 // Event listeners
 
@@ -29,15 +29,64 @@ let aspectRatio = sliderContainer.clientWidth / sliderContainer.clientHeight;
  */
 window.addEventListener('resize', () => {
     aspectRatio = sliderContainer.clientWidth / sliderContainer.clientHeight;
+    orientationPortrait = aspectRatio < CHANGE_ASPECT_RATIO;
     renderSlides();
 });
 
 /**
  * Event listeners for buttons. Changes the active slide based on the button clicked and re-renders the slides.
  */
-buttonPrevious.addEventListener('click', () => changeSlide(PREVIOUS));
-buttonNext.addEventListener('click', () => changeSlide(NEXT));
+buttonNext.addEventListener('click', () => changeSlide(true));
+buttonPrevious.addEventListener('click', () => changeSlide(false));
 
+/**
+ * Event listeners for touch events. Changes the active slide based on the direction of the swipe and re-renders the slides.
+ * @param {boolean} orientationPortrait - Whether the slider is in portrait mode. Defaults to false.
+ **/
+let touchStartX, touchStartY, touchEndX, touchEndY;
+sliderContainer.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+});
+
+sliderContainer.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].clientX;
+    touchEndY = e.changedTouches[0].clientY;
+    const differenceX = touchEndX - touchStartX;
+    const differenceY = touchEndY - touchStartY;
+    if (Math.abs(differenceX) > 50 || Math.abs(differenceY) > 50) {
+        if ((orientationPortrait && differenceX > 0) 
+            || ( !orientationPortrait && differenceX < 0)) {
+            changeSlide(true);
+        } else {
+            changeSlide(false);
+        }
+    }
+});
+
+// Event listeners for scroll events. Changes the active slide based on the direction of the scroll and re-renders the slides.
+// This logic is still a bit wonky and will likely take a long time to get right. 
+// Left for the future me to figure out.
+let scrollStart, scrollEnd;
+sliderContainer.addEventListener('wheel', (e) => {
+    scrollEnd = e.deltaY;
+    if (scrollEnd - scrollStart > MINIMUM_SCROLL) {
+        changeSlide(true);
+    } else if (scrollEnd - scrollStart < -MINIMUM_SCROLL) {
+        changeSlide(false);
+    }
+    scrollStart = scrollEnd;
+});
+
+// Event listeners for key events. Changes the active slide based on the key pressed and re-renders the slides.
+// The keys are the right arrow, down arrow or Space for next, and the left arrow, up arrow and Shift + Space for previous.
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+        changeSlide(true);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || (e.key === ' ' && e.shiftKey)) {
+        changeSlide(false);
+    }
+});
 
 // Functions
 
@@ -47,7 +96,7 @@ buttonNext.addEventListener('click', () => changeSlide(NEXT));
  * Otherwise, it renders the slides in landscape mode.
  */
 const renderSlides = () => {
-    if (aspectRatio < CHANGE_ASPECT_RATIO) {
+    if (orientationPortrait) {
         // Portrait mode
         const sliderWidth = sliderContainer.clientWidth;
         imageSlide.style.transform = `translateX(-${activeSlideIndex * sliderWidth}px)`;
@@ -62,15 +111,15 @@ const renderSlides = () => {
 
 /**
  * Changes the active slide based on the given direction and re-renders the slides.
- * @param {string} direction - The direction to change the slide. Can be 'previous' or 'next'.
+ * @param {boolean} next - The direction to change the slide. True for previous, false for next. Defaults to true.
  */
-const changeSlide = (direction) => {
-    if(direction === PREVIOUS) {
-        activeSlideIndex++;
-        if(activeSlideIndex > slidesLength - 1) activeSlideIndex = 0;
-    } else if(direction === NEXT) {
+const changeSlide = (next = true) => {
+    if(next) {
         activeSlideIndex--;
         if(activeSlideIndex < 0) activeSlideIndex = slidesLength - 1;
+    } else {
+        activeSlideIndex++;
+        if(activeSlideIndex > slidesLength - 1) activeSlideIndex = 0;
     }
     renderSlides();
 }

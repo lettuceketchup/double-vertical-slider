@@ -27,6 +27,8 @@ body {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
+    user-select: none;
+    pointer-events: none;
 }
 
 .text-slide > div {
@@ -56,6 +58,8 @@ body {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
+    user-select: none;
+    pointer-events: none;
 }
 
 .image-slide > div {
@@ -90,7 +94,7 @@ button:hover {
 }
 
 .slider-container .action-buttons .button-next {
-    background-color: aquamarine;
+    /* background-color: aquamarine; */
     transform: translateX(-100%);
     border-right: 0;
     border-top-left-radius: 0.15em;
